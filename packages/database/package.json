@@ -5,6 +5,10 @@
   "scripts": {
     "build": "prisma generate",
     "dev": "echo 'database dev'",
+    "db:push": "dotenv -e ../../.env -- prisma db push",
+    "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "db:studio": "dotenv -e ../../.env -- prisma studio",
+    "db:reset": "dotenv -e ../../.env -- prisma migrate reset",
     "test": "echo 'No tests yet'",
     "lint": "echo 'lint'"
   },
@@ -12,6 +16,7 @@
     "@prisma/client": "^5.16.0"
   },
   "devDependencies": {
+    "dotenv-cli": "^7.4.0",
     "prisma": "^5.16.0",
     "typescript": "*"
   }

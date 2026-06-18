@@ -10,9 +10,18 @@
     "lint": "echo 'lint'"
   },
   "dependencies": {
-    "fastify": "^4.28.0"
+    "@fastify/jwt": "^8.0.0",
+    "@prisma/client": "^5.16.0",
+    "@senconvoit/shared": "*",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.0",
+    "fastify": "^4.28.0",
+    "fastify-plugin": "^4.5.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@senconvoit/database": "*",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "typescript": "*"
   }
