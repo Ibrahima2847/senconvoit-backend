@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  PASSAGER
+  CONDUCTEUR
+  CHAUFFEUR
+  ADMIN
+}
+
+enum TrajetStatut {
+  PLANIFIE
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum ReservationStatut {
+  EN_ATTENTE
+  CONFIRMEE
+  ANNULEE
+  TERMINEE
+}
+
+enum ChauffeurStatut {
+  ACTIF
+  SUSPENDU
+  EN_MISSION
+}
+
+enum DemandeStatut {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  EN_COURS
+  TERMINEE
+}
+
+enum PaiementMethode {
+  WAVE
+  ORANGE_MONEY
+  FREE_MONEY
+  ESPECES
+}
+
+enum PaiementStatut {
+  EN_ATTENTE
+  REUSSI
+  ECHOUE
+  REMBOURSE
+}
+
+enum TypeCible {
+  CONDUCTEUR
+  PASSAGER
+  CHAUFFEUR
+}
+
+enum NotificationType {
+  RESERVATION
+  PAIEMENT
+  MESSAGE
+  TRAJET
+  SYSTEME
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Utilisateur {
+  id               String    @id @default(cuid())
+  nom              String
+  prenom           String
+  telephone        String    @unique
+  email            String?
+  password_hash    String
+  photoUrl         String?
+  role             Role      @default(PASSAGER)
+  estVerifie       Boolean   @default(false)
+  pieceIdentiteUrl String?
+  noteMoyenne      Float     @default(0)
+  nbAvis           Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  vehicules       Vehicule[]
+  trajets         Trajet[]           @relation("ConducteurTrajets")
+  reservations    Reservation[]      @relation("PassagerReservations")
+  chauffeurProfil Chauffeur?
+  demandesClient  DemandeChauffeur[] @relation("ClientDemandes")
+  paiements       Paiement[]         @relation("PayeurPaiements")
+  conversations1  Conversation[]     @relation("Participant1")
+  conversations2  Conversation[]     @relation("Participant2")
+  messages        Message[]
+  avisEmis        Avis[]             @relation("AuteurAvis")
+  avisRecus       Avis[]             @relation("CibleAvis")
+  notifications   Notification[]
+}
+
+model Vehicule {
+  id              String   @id @default(cuid())
+  utilisateurId   String
+  marque          String
+  modele          String
+  annee           Int
+  couleur         String
+  immatriculation String   @unique
+  nbPlaces        Int
+  photoUrl        String?
+  estActif        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  utilisateur Utilisateur        @relation(fields: [utilisateurId], references: [id])
+  trajets     Trajet[]
+  demandes    DemandeChauffeur[]
+}
+
+model Ville {
+  id        String @id @default(cuid())
+  nom       String @unique
+  region    String
+  pays      String
+  latitude  Float
+  longitude Float
+
+  trajetsDepart   Trajet[]           @relation("VilleDepartTrajets")
+  trajetsArrivee  Trajet[]           @relation("VilleArriveeTrajets")
+  demandesDepart  DemandeChauffeur[] @relation("VilleDepartDemandes")
+  demandesArrivee DemandeChauffeur[] @relation("VilleArriveeDemandes")
+}
+
+model Trajet {
+  id                String       @id @default(cuid())
+  conducteurId      String
+  vehiculeId        String
+  villeDepartId     String
+  villeArriveeId    String
+  dateDepart        DateTime
+  placesTotales     Int
+  placesDisponibles Int
+  prixParPlace      Float
+  statut            TrajetStatut @default(PLANIFIE)
+  description       String?
+  deletedAt         DateTime?
+  createdAt         DateTime     @default(now())
+
+  conducteur    Utilisateur   @relation("ConducteurTrajets", fields: [conducteurId], references: [id])
+  vehicule      Vehicule      @relation(fields: [vehiculeId], references: [id])
+  villeDepart   Ville         @relation("VilleDepartTrajets", fields: [villeDepartId], references: [id])
+  villeArrivee  Ville         @relation("VilleArriveeTrajets", fields: [villeArriveeId], references: [id])
+  reservations  Reservation[]
+  conversations Conversation[]
+  avis          Avis[]
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  passagerId   String
+  trajetId     String
+  nbPlaces     Int
+  montantTotal Float
+  statut       ReservationStatut @default(EN_ATTENTE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  passager  Utilisateur @relation("PassagerReservations", fields: [passagerId], references: [id])
+  trajet    Trajet      @relation(fields: [trajetId], references: [id])
+  paiements Paiement[]
+}
+
+model Chauffeur {
+  id            String          @id @default(cuid())
+  utilisateurId String          @unique
+  numeroPermis  String          @unique
+  permisUrl     String?
+  photoUrl      String?
+  noteMoyenne   Float           @default(0)
+  nbMissions    Int             @default(0)
+  statut        ChauffeurStatut @default(ACTIF)
+  disponible    Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+
+  utilisateur Utilisateur        @relation(fields: [utilisateurId], references: [id])
+  demandes    DemandeChauffeur[]
+}
+
+model DemandeChauffeur {
+  id             String        @id @default(cuid())
+  clientId       String
+  chauffeurId    String?
+  vehiculeId     String
+  villeDepartId  String
+  villeArriveeId String
+  dateMission    DateTime
+  prixPropose    Float
+  statut         DemandeStatut @default(EN_ATTENTE)
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  client       Utilisateur @relation("ClientDemandes", fields: [clientId], references: [id])
+  chauffeur    Chauffeur?  @relation(fields: [chauffeurId], references: [id])
+  vehicule     Vehicule    @relation(fields: [vehiculeId], references: [id])
+  villeDepart  Ville       @relation("VilleDepartDemandes", fields: [villeDepartId], references: [id])
+  villeArrivee Ville       @relation("VilleArriveeDemandes", fields: [villeArriveeId], references: [id])
+  paiements    Paiement[]
+}
+
+model Paiement {
+  id               String          @id @default(cuid())
+  reservationId    String?
+  demandeId        String?
+  payeurId         String
+  montant          Float
+  commission       Float
+  methode          PaiementMethode
+  statut           PaiementStatut  @default(EN_ATTENTE)
+  referenceExterne String?
+  createdAt        DateTime        @default(now())
+
+  reservation Reservation?      @relation(fields: [reservationId], references: [id])
+  demande     DemandeChauffeur? @relation(fields: [demandeId], references: [id])
+  payeur      Utilisateur       @relation("PayeurPaiements", fields: [payeurId], references: [id])
+}
+
+model Conversation {
+  id               String    @id @default(cuid())
+  participant1Id   String
+  participant2Id   String
+  trajetId         String?
+  dernierMessageAt DateTime?
+  createdAt        DateTime  @default(now())
+
+  participant1 Utilisateur @relation("Participant1", fields: [participant1Id], references: [id])
+  participant2 Utilisateur @relation("Participant2", fields: [participant2Id], references: [id])
+  trajet       Trajet?     @relation(fields: [trajetId], references: [id])
+  messages     Message[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  expediteurId   String
+  contenu        String   @db.Text
+  lu             Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  expediteur   Utilisateur  @relation(fields: [expediteurId], references: [id])
+}
+
+model Avis {
+  id          String    @id @default(cuid())
+  auteurId    String
+  cibleId     String
+  trajetId    String?
+  note        Int       @db.SmallInt
+  commentaire String?
+  typeCible   TypeCible
+  createdAt   DateTime  @default(now())
+
+  auteur Utilisateur @relation("AuteurAvis", fields: [auteurId], references: [id])
+  cible  Utilisateur @relation("CibleAvis", fields: [cibleId], references: [id])
+  trajet Trajet?     @relation(fields: [trajetId], references: [id])
+
+  @@unique([auteurId, trajetId])
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  utilisateurId String
+  titre         String
+  corps         String           @db.Text
+  type          NotificationType
+  lue           Boolean          @default(false)
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+
+  utilisateur Utilisateur @relation(fields: [utilisateurId], references: [id])
+}

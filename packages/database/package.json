@@ -3,12 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "echo 'database: run prisma generate'",
+    "build": "prisma generate",
     "dev": "echo 'database dev'",
     "test": "echo 'No tests yet'",
     "lint": "echo 'lint'"
   },
+  "dependencies": {
+    "@prisma/client": "^5.16.0"
+  },
   "devDependencies": {
+    "prisma": "^5.16.0",
     "typescript": "*"
   }
 }
