@@ -1,0 +1,21 @@
+{
+  "name": "senconvoit-backend",
+  "version": "0.0.1",
+  "description": "Plateforme de mobilité intelligente pour le Sénégal et l'Afrique de l'Ouest",
+  "type": "module",
+  "packageManager": "npm@10.9.0",
+  "workspaces": [
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  }
+}

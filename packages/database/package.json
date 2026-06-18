@@ -1,0 +1,14 @@
+{
+  "name": "@senconvoit/database",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'database: run prisma generate'",
+    "dev": "echo 'database dev'",
+    "test": "echo 'No tests yet'",
+    "lint": "echo 'lint'"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  }
+}
